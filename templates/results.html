@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Analysis Results - InfectTest</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        h1, h2, h3 {
+            color: #333;
+        }
+
+        p, li {
+            color: #555;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #fefefe;
+            border-left: 4px solid #17a2b8;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f1f1f1;
+        }
+
+        .dangerous {
+            color: #dc3545;
+        }
+
+        .warning {
+            color: #ffc107;
+        }
+
+        .info {
+            color: #17a2b8;
+        }
+
+        a.button-link {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
+        a.button-link:hover {
+            background-color: #0056b3;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .highlight {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analysis Results</h1>
+        <p><strong>File:</strong> {{ file_name }}</p>
+        <p><strong>Hash:</strong> {{ file_hash }}</p>
+
+        {% if prediction %}
+            <h2>ML Prediction</h2>
+            <pre>{{ prediction | tojson(indent=2) }}</pre>
+        {% else %}
+            <p class="highlight">No ML prediction available.</p>
+        {% endif %}
+
+        {% if report %}
+            <h2>MobSF Summary</h2>
+            <ul>
+                {% for key, value in report.items() %}
+                    {% if key != 'dangerous_and_warning_permissions' %}
+                        <li><strong>{{ key.replace('_', ' ') | title }}:</strong> {{ value }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+
+            {% if report.dangerous_and_warning_permissions %}
+                <h3>Dangerous and Warning Permissions</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Permission</th>
+                            <th>Status</th>
+                            <th>Info</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perm in report.dangerous_and_warning_permissions %}
+                        <tr class="{{ perm.status }}">
+                            <td>{{ perm.permission }}</td>
+                            <td class="{{ perm.status }}">{{ perm.status | capitalize }}</td>
+                            <td>{{ perm.info }}</td>
+                            <td>{{ perm.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        {% else %}
+            <p class="highlight">No MobSF report available.</p>
+        {% endif %}
+
+        {% if pdf_exists %}
+            <a class="button-link" href="{{ url_for('download_report', file_name=file_name, report_type='pdf', folder=folder) }}" target="_blank">Download PDF Report</a>
+        {% endif %}
+
+        <div class="back-link">
+            <a href="{{ url_for('index') }}">🔄 Analyze another APK</a>
+        </div>
+    </div>
+</body>
+</html>
